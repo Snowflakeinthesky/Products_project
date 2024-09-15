@@ -1,0 +1,77 @@
+{% load static %}
+
+<!DOCTYPE html>
+   <html lang="en">
+   <head>
+       <meta charset="UTF-8">
+       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+       <title>Products</title>
+       <link rel="stylesheet" href="{% static 'products/styles.css' %}">
+   </head>
+   <body>
+       <h1>ДОБАВИТЬ ПРОДУКТ</h1>
+       <form id="product-form">
+           <input type="text" id="name" required placeholder="Наименование продукта">
+           <textarea id="description" required placeholder="Описание продукта"></textarea>
+           <input type="number" id="price" required placeholder="Цена" step="0.01" min="0">
+           <button type="submit">Добавить продукт</button>
+       </form>
+
+       <h1>СПИСОК ПРОДУКТОВ</h1>
+       <table id="products-table">
+           <thead>
+               <tr>
+                   <th>Наименование продукта</th>
+                   <th>Описание продукта</th>
+                   <th>Цена</th>
+               </tr>
+           </thead>
+           <tbody></tbody>
+       </table>
+
+       <script>
+           async function fetchProducts() {
+               const response = await fetch('/api/products/');
+               const products = await response.json();
+       const tableBody = document.querySelector('#products-table tbody');
+               tableBody.innerHTML = '';
+               products.forEach(product => {
+                   const row = document.createElement('tr');
+                   row.innerHTML = `
+                       <td>${product.name}</td>
+                       <td>${product.description}</td>
+                       <td>${product.price}</td>
+                   `;
+                   tableBody.appendChild(row);
+               });
+           }
+
+           document.getElementById('product-form').addEventListener('submit', async (e) => {
+               e.preventDefault();
+               const name = document.getElementById('name').value;
+               const description = document.getElementById('description').value;
+               const price = parseFloat(document.getElementById('price').value);
+
+               const response = await fetch('/api/products/', {
+                   method: 'POST',
+                   headers: {
+                       'Content-Type': 'application/json',
+                   },
+                   body: JSON.stringify({
+                       name, description, price
+                   }),
+               });
+
+               if (response.ok) {
+                   document.getElementById('product-form').reset();
+                   fetchProducts();
+               } else {
+                   alert('Failed to create product');
+               }
+           });
+
+           // Initial fetch to display products
+           fetchProducts();
+       </script>
+   </body>
+   </html>
